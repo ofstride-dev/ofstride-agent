@@ -1,0 +1,22 @@
+{
+  "title": "MatchingAgentInput",
+  "type": "object",
+  "properties": {
+    "intent_bucket": { "type": "string" },
+    "summary": { "type": "string" },
+    "contact_name": { "type": "string" },
+    "work_email": { "type": "string" },
+    "requirements": { "type": "array", "items": { "type": "string" } },
+    "constraints": { "type": "array", "items": { "type": "string" } },
+    "risks": { "type": "array", "items": { "type": "string" } },
+    "timeline": { "type": "string" },
+    "budget": { "type": "string" },
+    "stakeholders": { "type": "array", "items": { "type": "string" } },
+    "recommended_tools": { "type": "array", "items": { "type": "string" } },
+    "session_summary": { "type": "string" },
+    "document_summary": { "type": "string" },
+    "document_entities": { "type": "object" },
+    "matching_weights": { "type": "object" }
+  },
+  "required": ["intent_bucket", "summary"]
+}

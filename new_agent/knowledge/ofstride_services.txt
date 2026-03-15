@@ -1,0 +1,321 @@
+Ofstride services knowledge base 
+
+1. HR Consulting
+Talent Acquisition & Recruitment
+Description: Strategic sourcing and vetting of high-caliber candidates using data-driven methodologies to ensure cultural fit and long-term retention. Common use cases:
+
+Executive search for C-suite roles
+
+Technical team scaling for startups
+
+High-volume seasonal recruitment
+
+Diversity and inclusion hiring initiatives
+
+ Delivery phases:
+
+Role profiling & competency mapping
+
+Sourcing & candidate screening
+
+Interview process structuring
+
+Offer negotiation & onboarding support
+
+Employee Development & Training
+Description: Design and execution of bespoke learning ecosystems to close skill gaps, accelerate leadership readiness, and boost workforce agility. Common use cases:
+
+Manager-to-leader transition programs
+
+Technical upskilling workshops
+
+Soft skills & conflict resolution training
+
+Compliance & safety training 
+
+Delivery phases:
+
+Skills gap analysis
+
+Curriculum design & content creation
+
+Workshop facilitation (remote/onsite)
+
+Impact assessment & feedback loops
+
+Compensation & Benefits Design
+Description: Development of competitive reward frameworks that balance fiscal responsibility with market positioning to attract and retain top talent. Common use cases:
+
+Salary benchmarking against competitors
+
+Executive equity & stock option planning
+
+Employee wellness program design
+
+Incentive structure overhaul 
+
+Delivery phases:
+
+Internal equity audit
+
+Market data analysis
+
+Structure modeling & costing
+
+Policy documentation & rollout
+
+2. Financial Consulting
+Financial Planning & Analysis (FP&A)
+Description: Deep-dive analytics and reporting mechanisms that transform raw financial data into actionable intelligence for profitability and growth. Common use cases:
+
+profitability analysis by product line
+
+Cost reduction strategy
+
+Cash flow variance analysis
+
+KPI dashboard development 
+
+Delivery phases:
+
+Data source integration
+
+Model building & stress testing
+
+Report design & automation
+
+Quarterly strategic reviews
+
+Budgeting & Forecasting
+Description: Implementation of dynamic budgeting models and predictive insights to anticipate cash flow needs and allocate resources effectively. Common use cases:
+
+Annual operating plan creation
+
+Rolling 12-month forecasts
+
+Scenario planning (Best/Worst case)
+
+Capital expenditure (CapEx) planning 
+
+Delivery phases:
+
+Historical data review
+
+Departmental input collection
+
+Draft model creation
+
+Variance tracking setup
+
+Tax Planning & Compliance
+Description: Proactive tax strategies designed to optimize liabilities while ensuring strict adherence to local and international fiscal regulations. Common use cases:
+
+Corporate income tax filing
+
+R&D tax credit applications
+
+Transfer pricing documentation
+
+VAT/GST compliance reviews 
+
+Delivery phases:
+
+Liability assessment
+
+Strategy formulation
+
+Documentation & filing
+
+Audit defense preparation
+
+Virtual CFO Support
+Description: High-level strategic financial leadership provided on a fractional basis to guide capital raising, M&A, and long-term roadmapping. Common use cases:
+
+Fundraising & investor relations
+
+Board meeting preparation
+
+M&A due diligence
+
+
+Financial turnkey for startups 
+
+Delivery phases:
+
+Initial financial health check
+
+Strategic roadmap development
+
+Monthly executive advisory
+
+Ad-hoc crisis management
+
+3. Legal Consulting
+Contract Review & Drafting
+Description: Drafting and scrutiny of commercial agreements to eliminate ambiguity, protect interests, and minimize future liability. Common use cases:
+
+Vendor & supplier service agreements
+
+Employment & non-compete contracts
+
+SaaS & licensing agreements
+
+Partnership & JV MOUs 
+
+Delivery phases:
+
+Requirements gathering
+
+Drafting & redlining
+
+Negotiation support
+
+Final execution & repository storage
+
+Intellectual Property (IP) Rights
+Description: Comprehensive strategies to register, monitor, and defend proprietary assets like trademarks, copyrights, and patents. Common use cases:
+
+Trademark search & registration
+
+Patent filing strategy
+
+Copyright infringement notices
+
+Brand protection monitoring 
+
+Delivery phases:
+
+IP audit & inventory
+
+Filing & prosecution
+
+Office action responses
+
+Portfolio management setup
+
+Regulatory Compliance
+Description: Navigation of complex industry-specific regulations to ensure operations remain compliant and free from penalties. Common use cases:
+
+GDPR & data privacy implementation
+
+Industry-specific audits (e.g., HIPAA, SEC)
+
+Anti-money laundering (AML) checks
+
+Corporate governance structuring 
+
+Delivery phases:
+
+Regulatory gap analysis
+
+Policy drafting & implementation
+
+Staff training & awareness
+
+Ongoing compliance monitoring
+
+Legal Risk Assessment
+Description: 360-degree audits of operational and corporate structures to identify latent liabilities and provide remediation roadmaps. Common use cases:
+
+Pre-investment legal due diligence
+
+Litigation risk analysis
+
+Supply chain liability review
+
+Corporate restructuring impact analysis 
+
+Delivery phases:
+
+Discovery & documentation review
+
+Stakeholder interviews
+
+Risk scoring & reporting
+
+Mitigation plan development
+
+4. IT Consulting
+Agentic AI Orchestration
+Description: Design and implementation of autonomous AI agents to automate business workflows across HR, Finance, Sales, and Operations. Common use cases:
+
+AI agents for lead qualification
+
+HR automation
+
+Finance ops automation
+
+Internal copilots 
+
+Delivery phases:
+
+Use case discovery
+
+Agent architecture design
+
+System integration
+
+Monitoring & optimization
+
+Edge AI & IoT Infrastructure
+Description: Architecture of decentralized computing networks that process data at the source, reducing latency and enabling real-time analytics. Common use cases:
+
+Smart factory predictive maintenance
+
+Retail inventory tracking sensors
+
+Remote asset monitoring
+
+Real-time video analytics
+
+ Delivery phases:
+
+Hardware & sensor selection
+
+Network topology design
+
+Edge software deployment
+
+Data pipeline integration
+
+Zero-Trust Security
+Description: Implementation of a "never trust, always verify" security architecture to harden networks against internal and external threats. Common use cases:
+
+Secure remote workforce access
+
+Micro-segmentation of networks
+
+Identity & Access Management (IAM) overhaul
+
+Ransomware defense strategy
+
+ Delivery phases:
+
+Vulnerability assessment
+
+Policy definition
+
+Identity provider integration
+
+Continuous monitoring setup
+
+Cloud Migration & Modernization
+Description: Management of seamless transitions from legacy systems to scalable cloud environments, including application refactoring. Common use cases:
+
+On-premise to AWS/Azure migration
+
+Monolith to microservices transformation
+
+Database modernization
+
+Disaster recovery implementation 
+
+Delivery phases:
+
+Readiness assessment
+
+Migration strategy (Lift & Shift vs. Refactor)
+
+Execution & data transfer
+
+Post-migration optimization

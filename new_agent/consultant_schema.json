@@ -1,0 +1,35 @@
+{
+  "title": "ConsultantProfile",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "headline": { "type": "string" },
+    "skills": { "type": "array", "items": { "type": "string" } },
+    "industries": { "type": "array", "items": { "type": "string" } },
+    "regions": { "type": "array", "items": { "type": "string" } },
+    "languages": { "type": "array", "items": { "type": "string" } },
+    "availability": {
+      "type": "object",
+      "properties": {
+        "timezone": { "type": "string" },
+        "hours_per_week": { "type": "number" },
+        "next_available_date": { "type": "string" }
+      },
+      "required": ["timezone"]
+    },
+    "rates": {
+      "type": "object",
+      "properties": {
+        "currency": { "type": "string" },
+        "hourly": { "type": "number" },
+        "project_min": { "type": "number" }
+      }
+    },
+    "experience_years": { "type": "number" },
+    "certifications": { "type": "array", "items": { "type": "string" } },
+    "case_studies": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "string" }
+  },
+  "required": ["id", "name", "skills", "industries", "regions", "availability"]
+}
