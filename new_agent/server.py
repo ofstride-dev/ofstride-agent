@@ -336,4 +336,6 @@ def run(host: str = "127.0.0.1", port: int = 8001) -> None:
 
 
 if __name__ == "__main__":
-	run()
+    import os
+    port = int(os.getenv("WEBSITES_PORT", "8001"))
+    run(host="0.0.0.0", port=port)

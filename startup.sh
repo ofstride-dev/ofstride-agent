@@ -3,5 +3,6 @@ set -e
 echo "Installing dependencies..."
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-echo "Starting application..."
-python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8001}
+pip install -r new_agent/requirements.txt
+echo "Starting Ofstride Agent..."
+python -m new_agent.server
