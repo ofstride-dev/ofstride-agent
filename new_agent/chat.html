@@ -15,11 +15,27 @@
     .row { display: flex; gap: 12px; }
     .input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0b1220; color: #e2e8f0; }
     .btn { padding: 10px 16px; border-radius: 8px; border: 0; background: #22c55e; color: #0f172a; font-weight: 600; cursor: pointer; }
+    .btn:hover { background: #16a34a; }
+    .btn:disabled { background: #6b7280; cursor: not-allowed; }
+    .btn-secondary { background: #3b82f6; color: white; }
+    .btn-secondary:hover { background: #2563eb; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
     .debug { margin-top: 12px; font-size: 12px; color: #94a3b8; white-space: pre-wrap; }
     .upload { margin-top: 12px; display: flex; gap: 12px; align-items: center; }
     .file { color: #cbd5f5; }
     .chips { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
     .chip { padding: 8px 12px; border-radius: 999px; border: 1px solid #334155; background: #0b1220; color: #e2e8f0; cursor: pointer; }
+    .chip:hover { background: #1f2937; }
+    .voice-controls { margin-top: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .toggle { display: inline-flex; align-items: center; gap: 8px; }
+    .toggle-switch { position: relative; width: 40px; height: 20px; background: #4b5563; border-radius: 10px; cursor: pointer; transition: background 0.3s; }
+    .toggle-switch.on { background: #22c55e; }
+    .toggle-switch::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: left 0.3s; }
+    .toggle-switch.on::after { left: 22px; }
+    .mic-status { font-size: 12px; color: #94a3b8; }
+    .recording .mic-status { color: #ef4444; }
+    .audio-player { margin-top: 12px; }
   </style>
 </head>
 <body>
@@ -35,6 +51,15 @@
         <input id="file" class="file" type="file" accept=".txt,.md,.csv,.log,.pdf" />
         <button id="upload" class="btn" style="background:#38bdf8;">Upload Document</button>
       </div>
+      <div class="voice-controls">
+        <div class="toggle">
+          <label for="voiceToggle">Voice Response:</label>
+          <div id="voiceToggle" class="toggle-switch"></div>
+        </div>
+        <button id="mic" class="btn btn-secondary">🎤 Speak</button>
+        <div id="micStatus" class="mic-status"></div>
+      </div>
+      <audio id="audioPlayer" class="audio-player" controls></audio>
       <div class="chips" id="chips">
         <button class="chip" data-service="IT Services" data-link="#">IT Services</button>
         <button class="chip" data-service="Finance Services" data-link="#">Finance Services</button>
@@ -53,7 +78,27 @@
     const fileInput = document.getElementById('file');
     const chips = document.getElementById('chips');
     const debugBox = document.getElementById('debug');
+    const micBtn = document.getElementById('mic');
+    const micStatus = document.getElementById('micStatus');
+    const voiceToggle = document.getElementById('voiceToggle');
+    const audioPlayer = document.getElementById('audioPlayer');
     const sessionId = 'dev_ui';
+
+    // Voice state
+    let voiceEnabled = false;
+    let isRecording = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+
+    function setVoiceEnabled(enabled) {
+      voiceEnabled = enabled;
+      voiceToggle.classList.toggle('on', enabled);
+      micBtn.disabled = !enabled;
+    }
+
+    voiceToggle.addEventListener('click', () => {
+      setVoiceEnabled(!voiceEnabled);
+    });
 
     function addMessage(text, role) {
       const div = document.createElement('div');
@@ -62,6 +107,158 @@
       messages.appendChild(div);
       messages.scrollTop = messages.scrollHeight;
     }
+
+    async function playAudio(text) {
+      try {
+        const res = await fetch('/speech/synthesize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        if (!res.ok) {
+          console.error('TTS failed:', res.statusText);
+          return;
+        }
+        const audioData = await res.arrayBuffer();
+        const blob = new Blob([audioData], { type: 'audio/wav' });
+        const url = URL.createObjectURL(blob);
+        audioPlayer.src = url;
+        audioPlayer.play();
+      } catch (err) {
+        console.error('Audio playback failed:', err);
+      }
+    }
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.addEventListener('dataavailable', (e) => {
+          audioChunks.push(e.data);
+        });
+        mediaRecorder.addEventListener('stop', async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          await recognizeAudio(audioBlob);
+          stream.getTracks().forEach(track => track.stop());
+        });
+        mediaRecorder.start();
+        isRecording = true;
+        micBtn.classList.add('recording');
+        micBtn.textContent = '⏹️ Stop Recording';
+        micStatus.textContent = 'Recording...';
+      } catch (err) {
+        console.error('Microphone access failed:', err);
+        micStatus.textContent = 'Microphone access denied';
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        micBtn.classList.remove('recording');
+        micBtn.textContent = '🎤 Speak';
+        micStatus.textContent = 'Processing...';
+      }
+    }
+
+    async function recognizeAudio(audioBlob) {
+      try {
+        // Convert WebM/browser audio to WAV for Azure
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const wavBuffer = await audioToWav(arrayBuffer);
+        
+        // Create FormData to send as file upload
+        const formData = new FormData();
+        formData.append('file', new Blob([wavBuffer], { type: 'audio/wav' }), 'audio.wav');
+        
+        const res = await fetch('/speech/recognize', {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) {
+          micStatus.textContent = 'Speech recognition failed';
+          return;
+        }
+        const data = await res.json();
+        const text = data.text || '';
+        if (text) {
+          input.value = text;
+          micStatus.textContent = '';
+          await sendMessage();
+        } else {
+          micStatus.textContent = 'No speech detected';
+        }
+      } catch (err) {
+        console.error('Speech recognition error:', err);
+        micStatus.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    // Simple WAV encoder for browser audio
+    async function audioToWav(arrayBuffer) {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      const numberOfChannels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const format = 1; // PCM
+      const bitDepth = 16;
+      const bytesPerSample = bitDepth / 8;
+      const blockAlign = numberOfChannels * bytesPerSample;
+      
+      const length = audioBuffer.length * numberOfChannels * bytesPerSample;
+      const arrayBuffer2 = new ArrayBuffer(44 + length);
+      const view = new DataView(arrayBuffer2);
+      
+      // Write WAV header
+      const writeString = (offset, string) => {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      };
+      
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + length, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true); // fmt chunk size
+      view.setUint16(20, format, true);
+      view.setUint16(22, numberOfChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * blockAlign, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, bitDepth, true);
+      writeString(36, 'data');
+      view.setUint32(40, length, true);
+      
+      // Write audio data
+      const channelDatas = [];
+      for (let i = 0; i < numberOfChannels; i++) {
+        channelDatas.push(audioBuffer.getChannelData(i));
+      }
+      
+      let offset = 44;
+      for (let i = 0; i < audioBuffer.length; i++) {
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+          let sample = channelDatas[channel][i];
+          sample = Math.max(-1, Math.min(1, sample)); // Clamp
+          view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          offset += 2;
+        }
+      }
+      
+      return arrayBuffer2;
+    }
+
+    micBtn.addEventListener('click', () => {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    });
 
     async function sendMessage() {
       const text = input.value.trim();
@@ -75,7 +272,12 @@
         body: JSON.stringify({ message: text, session_id: sessionId })
       });
       const data = await res.json();
-      if (data.text) addMessage(data.text, 'bot');
+      if (data.text) {
+        addMessage(data.text, 'bot');
+        if (voiceEnabled) {
+          await playAudio(data.text);
+        }
+      }
       if (data.debug) debugBox.textContent = JSON.stringify(data.debug, null, 2);
       if (data.session_summary) {
         debugBox.textContent += "\n\nSession Summary:\n" + data.session_summary;

@@ -35,7 +35,12 @@ def handle_message(
     state.domain_confidence = domain_decision.confidence
 
     # Case brief extraction (no control domain changes)
-    state.case_brief = extract_case_brief(message, llm=llm)
+    state.case_brief = extract_case_brief(
+        message,
+        llm=llm,
+        system_prompt=system_prompt,
+        previous_brief=previous_state.case_brief if previous_state else None,
+    )
 
     # Conflict detection
     if previous_state:

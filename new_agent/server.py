@@ -15,9 +15,18 @@ from .llm_client import LLMClient
 from .models import IntakeState
 from .telemetry import TELEMETRY
 from .tenant_config import load_tenants, resolve_tenant
+from .voice_service import VoiceService
+from .chart_agent import ChartAgent
 
 BASE_DIR = Path(__file__).resolve().parent
 TENANTS = load_tenants(BASE_DIR)
+
+# Initialize voice service (optional - won't fail if keys not configured)
+try:
+	VOICE_SERVICE = VoiceService()
+except ValueError:
+	VOICE_SERVICE = None
+
 DEFAULT_CORS_ORIGINS = [
 	"http://localhost:5173",
 	"http://127.0.0.1:5173",
@@ -52,6 +61,14 @@ class ChatHandler(BaseHTTPRequestHandler):
 
 	def _send_text(self, status: int, payload: str, content_type: str = "text/plain") -> None:
 		data = payload.encode("utf-8")
+		self.send_response(status)
+		self._set_cors()
+		self.send_header("Content-Type", content_type)
+		self.send_header("Content-Length", str(len(data)))
+		self.end_headers()
+		self.wfile.write(data)
+
+	def _send_binary(self, status: int, data: bytes, content_type: str = "application/octet-stream") -> None:
 		self.send_response(status)
 		self._set_cors()
 		self.send_header("Content-Type", content_type)
@@ -247,6 +264,38 @@ class ChatHandler(BaseHTTPRequestHandler):
 						"extracted_preview": extracted[:2000],
 					},
 				)
+			except Exception as exc:
+				self._send_json(500, {"error": str(exc)})
+			return
+		if self.path == "/speech/synthesize":
+			try:
+				if not VOICE_SERVICE:
+					self._send_json(503, {"error": "Voice service not configured. Please set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION."})
+					return
+				length = int(self.headers.get("Content-Length", "0"))
+				body = self.rfile.read(length).decode("utf-8")
+				payload = json.loads(body) if body else {}
+				text = str(payload.get("text", "")).strip()
+				if not text:
+					self._send_json(400, {"error": "text is required"})
+					return
+				audio_data = VOICE_SERVICE.text_to_speech(text)
+				self._send_binary(200, audio_data, "audio/wav")
+			except Exception as exc:
+				self._send_json(500, {"error": str(exc)})
+			return
+		if self.path == "/speech/recognize":
+			try:
+				if not VOICE_SERVICE:
+					self._send_json(503, {"error": "Voice service not configured. Please set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION."})
+					return
+				length = int(self.headers.get("Content-Length", "0"))
+				body = self.rfile.read(length)
+				if not body:
+					self._send_json(400, {"error": "audio data is required"})
+					return
+				text = VOICE_SERVICE.speech_to_text(body)
+				self._send_json(200, {"text": text})
 			except Exception as exc:
 				self._send_json(500, {"error": str(exc)})
 			return
