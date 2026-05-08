@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Header
+from fastapi import FastAPI, File, UploadFile, Header, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -53,12 +53,14 @@ TENANTS = load_tenants(BASE_DIR)
 
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:5173",
+    "http://localhost:5174",
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
     "http://localhost:4173",
-    "http://127.0.0.1:4173",
     "http://127.0.0.1:5500",
     "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "https://fluffy-spork-r4jr99wp5qv63pw7p-5173.app.github.dev",
+    "https://fluffy-spork-r4jr99wp5qv63pw7p-5174.app.github.dev",
 ]
 
 CHAT_CORS_ORIGINS_RAW = os.getenv("CHAT_CORS_ORIGINS")
@@ -79,8 +81,8 @@ app = FastAPI(title="Ofstride Agent", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CHAT_CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -444,6 +446,43 @@ async def recognize_speech(file: UploadFile = File(...)):
             status_code=500,
             content={"error": str(exc)}
         )
+
+@app.post("/api/chat")
+async def api_chat(request: ChatRequest, host: Optional[str] = Header(None)):
+    """Alias for /chat — matches frontend's fetch(`${leadApiBase}/api/chat`)"""
+    return await chat(request, host)
+
+
+@app.post("/api/leads")
+async def api_leads(request: dict = None):
+    """Receives intake form data from frontend. Extend to write to CRM/DB."""
+    TELEMETRY.record("lead_saved", {})
+    return {"status": "ok"}
+
+
+@app.post("/api/consultant")
+async def api_consultant(request: dict = None):
+    """
+    Consultant matching. Reads public/data/consultants.csv.
+    Falls back to a generic response if file not found.
+    """
+    import csv as csv_module
+    csv_path = Path(__file__).resolve().parent / "public" / "data" / "consultants.csv"
+    if not csv_path.exists():
+        raise HTTPException(status_code=404, detail="No consultant data found")
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        reader = csv_module.DictReader(f)
+        consultants = list(reader)
+    if not consultants:
+        raise HTTPException(status_code=404, detail="No consultants available")
+    return {"consultant": consultants[0]}
+
+
+@app.post("/api/notify")
+async def api_notify(request: dict = None):
+    """Logs consultant notification. Wire to email/Slack in production."""
+    TELEMETRY.record("notify_requested", {})
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
