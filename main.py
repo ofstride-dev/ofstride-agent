@@ -17,7 +17,12 @@ from new_agent.models import IntakeState
 from new_agent.telemetry import TELEMETRY
 from new_agent.tenant_config import load_tenants, resolve_tenant
 from new_agent.chart_agent import ChartAgent
-from new_agent.voice_service import VoiceService
+try:
+    from new_agent.voice_service import VoiceService
+    _VOICE_IMPORT_OK = True
+except (ImportError, ModuleNotFoundError):
+    VoiceService = None  # type: ignore
+    _VOICE_IMPORT_OK = False
 
 
 # Request body models
@@ -41,11 +46,13 @@ class InitSessionRequest(BaseModel):
     phone_number: Optional[str] = None
     location: Optional[str] = None
     company_name: Optional[str] = None
-# Initialize voice service (optional - won't fail if keys not configured)
-try:
-    VOICE_SERVICE = VoiceService()
-except ValueError:
-    VOICE_SERVICE = None
+# Initialize voice service (optional — requires azure-cognitiveservices-speech)
+VOICE_SERVICE = None
+if _VOICE_IMPORT_OK and VoiceService is not None:
+    try:
+        VOICE_SERVICE = VoiceService()
+    except Exception:
+        VOICE_SERVICE = None
 
 
 BASE_DIR = Path(__file__).resolve().parent / "new_agent"

@@ -1,7 +1,11 @@
 fastapi==0.115.6
 uvicorn==0.30.6
+gunicorn==22.0.0
 python-multipart==0.0.9
 requests==2.32.3
 PyPDF2>=3.0.0
 python-dotenv>=1.0.0
-gunicorn==22.0.0
+# Voice features — optional, requires native binaries
+# Uncomment when deploying to an environment that supports it (e.g. Docker with build tools)
+# azure-cognitiveservices-speech>=1.38.0
+ 
