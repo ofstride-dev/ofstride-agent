@@ -289,6 +289,8 @@ async def chat(request: ChatRequest, host: Optional[str] = Header(None)):
         
         return {
             "text": result.get("text"),
+            "buttons": result.get("buttons"),
+            "escalate": result.get("escalate", False),
             "debug": result.get("debug"),
             "handoff": result.get("handoff"),
             "matching_weights": result.get("matching_weights"),

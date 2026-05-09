@@ -25,16 +25,15 @@ def handle_message(
     knowledge_override: str | None = None,
 ) -> Dict[str, object]:
     state = previous_state or IntakeState()
-    # GeminiClient() is retained for fallback; GPT-4o is primary.
     llm = LLMClient()
 
-    # Domain resolution (only place to set control_domain)
+    # Domain resolution
     domain_decision = resolve_domain(message, llm, system_prompt)
     state.control_domain = domain_decision.control_domain
     state.service_domain = domain_decision.service_domain
     state.domain_confidence = domain_decision.confidence
 
-    # Case brief extraction (no control domain changes)
+    # Case brief extraction
     state.case_brief = extract_case_brief(
         message,
         llm=llm,
@@ -46,7 +45,7 @@ def handle_message(
     if previous_state:
         state.conflict = detect_conflicts(previous_state.case_brief, state.case_brief)
 
-    # Missing fields + escalation decision
+    # Stage determination
     state.missing_fields = missing_fields(state.case_brief)
     state.stage = determine_stage(state.missing_fields)
     state.escalation = decide_escalation(
@@ -55,28 +54,39 @@ def handle_message(
         missing_fields=state.missing_fields,
     )
 
-    # Knowledge-aware response generation
+    # Knowledge-aware response generation — returns {text, buttons, escalate}
     knowledge_text = load_knowledge(knowledge_override)
-    response_text = generate_response(
+    response_obj = generate_response(
         message=message,
         state=state,
         llm=llm,
         system_prompt=system_prompt,
         knowledge_text=knowledge_text,
     )
-    response_text = apply_guardrails(response_text)
 
-    # Session summary memory
+    response_text = apply_guardrails(response_obj.get("text", ""))
+    buttons = response_obj.get("buttons")
+    escalate = response_obj.get("escalate", False)
+
+    # Build escalation button if needed and not already present
+    if escalate:
+        consultant_btn = "Talk to a consultant"
+        if not buttons:
+            buttons = [consultant_btn]
+        elif consultant_btn not in buttons:
+            buttons = list(buttons) + [consultant_btn]
+
+    # Session summary — now tracks both sides of the conversation
     state.session_summary = update_session_summary(
         message=message,
         previous_summary=previous_state.session_summary if previous_state else None,
         llm=llm,
+        saarthi_last_reply=response_text,
     )
 
-    # Handoff package for matching agent
+    # Handoff package
     state.handoff = build_handoff(message=message, state=state, llm=llm)
 
-    # Debug visibility
     state.debug = {
         "domain_decision": domain_decision.__dict__,
         "conflict": state.conflict.__dict__,
@@ -87,10 +97,13 @@ def handle_message(
         "matching_weights": weights_as_dict(),
         "tools": [tool.__dict__ for tool in get_tool_registry()],
         "session_summary": state.session_summary,
+        "buttons": buttons,
     }
 
     return {
         "text": response_text,
+        "buttons": buttons,
+        "escalate": escalate,
         "debug": state.debug,
         "handoff": state.handoff.__dict__,
         "session_summary": state.session_summary,
