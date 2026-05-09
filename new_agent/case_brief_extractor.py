@@ -7,7 +7,7 @@ from .models import CaseBrief
 
 FIELDS = [
     "contact_name",
-    "work_email",
+    # work_email omitted — widget collects phone instead; not required for routing
     "problem_summary",
     "desired_outcome",
     "service",

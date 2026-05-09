@@ -4,7 +4,8 @@ from .models import IntakeStage, NextQuestionDecision
 
 
 def determine_stage(missing_fields: list[str]) -> IntakeStage:
-    if any(f in missing_fields for f in ["contact_name", "work_email"]):
+    # work_email is optional — widget collects name/phone instead
+    if "contact_name" in missing_fields:
         return IntakeStage.LEAD
     if "problem_summary" in missing_fields:
         return IntakeStage.DISCOVERY

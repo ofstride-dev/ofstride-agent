@@ -14,44 +14,46 @@ def generate_response(
     system_prompt: str,
     knowledge_text: str,
 ) -> str:
-    context = {
-        "stage": state.stage.value,
-        "control_domain": state.control_domain,
-        "service_domain": state.service_domain,
-        "missing_fields": state.missing_fields,
-        "case_brief": state.case_brief.__dict__,
-        "session_summary": state.session_summary,
-        "document_summary": state.document_summary,
-        "document_entities": state.document_entities,
-    }
-    knowledge_block = knowledge_text.strip()
-    user_prompt_parts = [
-        "User message:",
-        message,
-        "",
-        "Context (JSON):",
-        json.dumps(context, ensure_ascii=False, indent=2),
-        "",
-        "Intent buckets (soft, choose one or blend): Consulting / strategy | AI / tech help | HR / people | Finance / compliance | Legal-ish | General business",
+    brief = state.case_brief.__dict__
+
+    # Build a clean known-facts block — only fields that are actually filled
+    known = {k: v for k, v in brief.items() if v}
+
+    context_parts = [
+        f"Stage: {state.stage.value}",
+        f"Known about user: {json.dumps(known, ensure_ascii=False)}",
+        f"Still unknown: {state.missing_fields}",
     ]
+    if state.session_summary:
+        context_parts.append(f"Conversation so far: {state.session_summary}")
+    if state.document_summary:
+        context_parts.append(f"Document context: {state.document_summary}")
+
+    context_block = "\n".join(context_parts)
+
+    knowledge_block = knowledge_text.strip()
+
+    user_prompt_parts = [
+        f"User just said: {message}",
+        "",
+        context_block,
+    ]
+
     if knowledge_block:
         user_prompt_parts += [
             "",
-            "Company knowledge (use only if relevant):",
-            knowledge_block,
+            "Ofstride services reference (use naturally if relevant, don't dump):",
+            knowledge_block[:3000],  # Keep prompt lean
         ]
+
     user_prompt_parts += [
         "",
-        "Instructions:",
-        "1) Be conversational, helpful, and confident; do not sound procedural.",
-        "2) Maintain an internal running summary of what the user is trying to do (do NOT output this summary).",
-        "3) If the user asks about Ofstride services, answer from the knowledge context.",
-        "4) Use knowledge as suggestions/examples; never override what the user said.",
-        "5) Provide actionable help (ideas, options, tradeoffs) based on intent.",
-        "6) Follow the Saarthi flow (greeting, lead capture, intent, discovery, qualification, conversion).",
-        "7) If lead capture is missing, ask for name and work email before deep intake.",
-        "8) Ask 1–2 natural follow-up questions aligned to the current stage.",
-        "9) Keep responses concise and professional.",
+        "Reply as Saarthi. Be warm and conversational. One question max. "
+        "Never re-ask anything already in 'Known about user'. "
+        "Never use numbered lists or bold text. "
+        "If you know their name, use it occasionally but not every message. "
+        "Keep it short — 2-4 sentences is ideal unless they asked something detailed.",
     ]
+
     user_prompt = "\n".join(user_prompt_parts)
-    return llm.generate_text(system_prompt, user_prompt) or "Could you share a bit more detail?"
+    return llm.generate_text(system_prompt, user_prompt) or "Could you tell me a bit more about what you're looking for?"
